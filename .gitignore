@@ -1,0 +1,5 @@
+debug/
+__pycache__/
+*.pyc
+data/rates_demo.csv
+docs/index.html
