@@ -2,120 +2,738 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Savings APY Tracker</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#6b7280;--line:#e5e7eb;--card:#f9fafb;--warn:#b45309}
-@media(prefers-color-scheme:dark){:root{--bg:#111418;--fg:#e8e8e8;--mut:#9ca3af;--line:#2a2f36;--card:#181c22;--warn:#fbbf24}}
-body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:960px;margin:0 auto;padding:20px}
-h1{font-size:22px;margin:0 0 4px}
-.sub{color:var(--mut);font-size:13px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:14px 0;overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
-.n{text-align:right;font-variant-numeric:tabular-nums}
-.up{color:#16a34a}.down{color:#dc2626}
-.warn{color:var(--warn);font-size:13px}
-select{padding:4px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px}
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --mut: #6b7280;
+  --line: #e5e7eb;
+  --card: #f9fafb;
+  --gold: #fff1b8;
+  --gold-border: #eab308;
+  --gold-text: #713f12;
+  --green: #15803d;
+  --red: #dc2626;
+  --warn: #b45309;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111418;
+    --fg: #e8e8e8;
+    --mut: #9ca3af;
+    --line: #2a2f36;
+    --card: #181c22;
+    --gold: #493b17;
+    --gold-border: #d4a017;
+    --gold-text: #fde68a;
+    --green: #4ade80;
+    --red: #f87171;
+    --warn: #fbbf24;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1 {
+  font-size: 26px;
+  margin: 0 0 5px;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: 17px;
+  margin: 0;
+}
+
+.sub {
+  color: var(--mut);
+  font-size: 13px;
+  margin-bottom: 22px;
+  line-height: 1.6;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 16px 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.section-note {
+  color: var(--mut);
+  font-size: 12px;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--mut);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+.n {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.apy {
+  font-size: 17px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.best-row {
+  background: var(--gold);
+}
+
+.best-row td {
+  border-bottom-color: var(--gold-border);
+}
+
+.best-row td:first-child {
+  border-left: 4px solid var(--gold-border);
+}
+
+.best-row .apy,
+.best-row .bank-name {
+  color: var(--gold-text);
+}
+
+.best-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: var(--gold-border);
+  color: #422006;
+  font-size: 10px;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.bank-name { font-weight: 650; }
+
+.up { color: var(--green); font-weight: 650; }
+.down { color: var(--red); font-weight: 650; }
+.unchanged { color: var(--mut); }
+
+small, .muted {
+  color: var(--mut);
+  font-size: 12px;
+}
+
+.warn {
+  color: var(--warn);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#problems {
+  border-color: var(--warn);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+select {
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  width: 100%;
+}
+
+.chart-legend-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--mut);
+}
+
+.notes {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.notes ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.notes li { margin: 5px 0; }
+
+.footer {
+  color: var(--mut);
+  font-size: 11px;
+  text-align: center;
+  padding: 8px 0 18px;
+}
+
+@media (max-width: 600px) {
+  body { padding: 14px; }
+  h1 { font-size: 23px; }
+  .card { padding: 12px; }
+  th, td { padding: 10px 9px; }
+  .chart-container { height: 330px; }
+}
 </style>
 </head>
+
 <body>
-<h1>Savings APY Tracker</h1>
-<div class="sub">Standard savings APY (no promo or boost) &middot; ZIP <span id="zips"></span> for local banks &middot; data as of <span id="asof"></span></div>
 
-<div class="card">
-  <table id="today">
-    <thead><tr><th>Bank</th><th>Product</th><th>Where</th><th class="n">APY</th><th class="n">Last change</th></tr></thead>
-    <tbody></tbody>
-  </table>
+<header>
+  <h1>Savings APY Tracker</h1>
+  <div class="sub">
+    Standard savings APY · Regular customers · No promotional rates
+    <br>
+    Data as of <strong id="asof">—</strong>
+    <span aria-hidden="true"> · </span>
+    ZIP coverage: <span id="zips">—</span>
+  </div>
+</header>
+
+<!-- 1. SUMMARY TABLE -->
+<section class="card">
+  <div class="section-head">
+    <h2>Today's Best Savings Rates</h2>
+    <span class="section-note">Sorted by APY, highest to lowest</span>
+  </div>
+
+  <div class="table-wrap">
+    <table id="today">
+      <thead>
+        <tr>
+          <th>Bank</th>
+          <th>Product</th>
+          <th class="n">APY</th>
+          <th>Last Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" class="muted">Loading rates...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="section-note" style="margin-top:12px">
+    The highest collected APY is highlighted in gold. Rates may have different
+    eligibility requirements; confirm details with the bank.
+  </div>
+</section>
+
+<!-- COLLECTION WARNINGS -->
+<div class="card warn" id="problems" hidden>
+  <strong>Collection issues</strong>
+  <ul id="problem-list"></ul>
 </div>
 
-<div class="card warn" id="problems" hidden></div>
-<div class="card" style="font-size:13px">
-  <b>What is counted</b>
-  <ul style="margin:6px 0 0 18px;padding:0">
-    <li><b>Regular customer only:</b> standard rates. Promotional, new-customer, referral, relationship and boost rates are excluded.</li>
-    <li><b>Chase</b>: Chase Savings &middot; <b>Wells Fargo</b>: Way2Save Savings &middot; <b>U.S. Bank</b>: Bank Smartly Savings standard rate (no checking account) &middot; <b>Citi</b>: Citi Savings, Everyday Benefits tier.</li>
-    <li><b>Capital One</b>: 360 Performance Savings (Discover savings accounts moved to Capital One, so Discover is not listed separately) &middot; <b>Wealthfront</b>: base APY.</li>
-    <li><b>Citi:</b> its rate page has no ZIP field, so the ZIP could not be confirmed for Citi.</li>
+<!-- 2. HISTORY CHART -->
+<section class="card">
+  <div class="section-head">
+    <div>
+      <h2>APY History</h2>
+      <div class="section-note" style="margin-top:5px">
+        Track how savings rates change over time.
+      </div>
+    </div>
+
+    <div class="controls">
+      <label for="range" class="section-note">Date range</label>
+      <select id="range">
+        <option value="30">Last 30 days</option>
+        <option value="90" selected>Last 90 days</option>
+        <option value="180">Last 6 months</option>
+        <option value="365">Last 12 months</option>
+        <option value="all">All history</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="chart" aria-label="Historical savings APY by bank"></canvas>
+  </div>
+
+  <div class="chart-legend-note">
+    Hover over a point to see the bank, exact APY, and date.
+    Each bank keeps the same color across date ranges.
+    Missing collection dates are not treated as zero APY.
+  </div>
+</section>
+
+<!-- 3. NOTES AT THE BOTTOM -->
+<section class="card notes">
+  <h2>Notes &amp; Methodology</h2>
+  <ul>
+    <li>
+      <strong>ZIP code 98005:</strong> Used as the reference ZIP code for banks
+      whose published savings rates or product availability may depend on
+      location. It is a rate-comparison reference, not a claim that every bank
+      uses ZIP-based pricing.
+    </li>
+    <li>
+      <strong>National rates:</strong> Some banks publish a national rate and
+      do not offer a ZIP-specific rate lookup. Those rates are shown as
+      national rates when the source supports that classification.
+    </li>
+    <li>
+      <strong>Regular customers only:</strong> Promotional, new-customer,
+      referral, relationship, and temporary boost rates are excluded.
+      Standard rates and eligibility terms should be verified on the bank's
+      official website.
+    </li>
+    <li>
+      <strong>Products tracked:</strong> Chase Savings; Wells Fargo Way2Save
+      Savings; U.S. Bank Bank Smartly Savings standard rate without a checking
+      account; Citi Savings using the configured Everyday Benefits tier;
+      Capital One 360 Performance Savings; and Wealthfront base APY.
+    </li>
+    <li>
+      <strong>Discover:</strong> Not listed separately in this tracker because
+      Discover savings accounts have moved under Capital One. Confirm the
+      current account and product terms with the provider.
+    </li>
+    <li>
+      <strong>Last Change:</strong> Calculated from the previous recorded APY
+      that differs from the latest recorded APY for the same bank, product,
+      and ZIP. It is not necessarily the bank's officially announced change
+      date.
+    </li>
+    <li>
+      <strong>Data quality:</strong> The table uses the latest successfully
+      collected value for each series. A stale value is labeled with its
+      collection date; it should not be interpreted as a confirmed current
+      rate.
+    </li>
   </ul>
-</div>
+</section>
 
-<div class="card">
-  <b>History</b> &nbsp; <select id="filter"></select>
-  <div style="height:380px"><canvas id="chart"></canvas></div>
-</div>
+<footer class="footer">
+  Savings APY Tracker · Informational comparison only · Verify rates with each bank
+</footer>
 
 <script>
 const RECORDS = __DATA__;
 
-const latestDate = RECORDS.reduce((a, r) => r.date > a ? r.date : a, "");
-document.getElementById("asof").textContent = latestDate;
-document.getElementById("zips").textContent = [...new Set(RECORDS.filter(r => r.zip).map(r => r.zip))].join(", ");
+// Stable colors: a bank always uses the same color, independent of ZIP,
+// product, date range, or dataset order.
+const BANK_COLORS = {
+  "Chase": "#2563eb",
+  "JPMorgan Chase": "#2563eb",
+  "Citi": "#db2777",
+  "Citibank": "#db2777",
+  "Discover": "#ea580c",
+  "Capital One": "#ea580c",
+  "Wealthfront": "#7c3aed",
+  "Marcus": "#0891b2",
+  "Goldman Sachs": "#0891b2",
+  "American Express": "#0d9488",
+  "Amex": "#0d9488",
+  "Wells Fargo": "#dc2626",
+  "U.S. Bank": "#4f46e5",
+  "US Bank": "#4f46e5"
+};
 
-const seriesKey = r => [r.bank, r.product, r.zip].join("|");
-const where = r => r.zip ? r.state + " " + r.zip : "National";
-const good = RECORDS.filter(r => r.status === "ok" && r.apy !== null);
+const FALLBACK_COLORS = [
+  "#64748b", "#65a30d", "#9333ea", "#c2410c",
+  "#0284c7", "#be123c", "#0f766e", "#a16207"
+];
 
-// group good rows into one series per bank/product/zip
-const series = {};
-good.forEach(r => (series[seriesKey(r)] = series[seriesKey(r)] || []).push(r));
+function bankColor(bank) {
+  if (BANK_COLORS[bank]) return BANK_COLORS[bank];
 
-// today's table: newest value, plus when it last changed
-const rows = Object.values(series).map(s => {
-  s.sort((a, b) => a.date < b.date ? -1 : 1);
-  const last = s[s.length - 1];
-  let prev = null;
-  for (let i = s.length - 1; i >= 0; i--) { if (s[i].apy !== last.apy) { prev = s[i]; break; } }
-  return { last, prev, stale: last.date !== latestDate };
-}).sort((a, b) => b.last.apy - a.last.apy);
-
-const tbody = document.querySelector("#today tbody");
-rows.forEach(x => {
-  let change = "&ndash;";
-  if (x.prev) {
-    const d = x.last.apy - x.prev.apy;
-    change = `<span class="${d > 0 ? "up" : "down"}">${d > 0 ? "+" : ""}${d.toFixed(2)}</span> <small>since ${x.prev.date}</small>`;
+  // Deterministic fallback for banks not listed above.
+  let hash = 0;
+  for (const char of bank) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   }
-  const tr = document.createElement("tr");
-  tr.innerHTML = `<td>${x.last.bank}</td>
-    <td>${x.last.product}${x.stale ? ` <small class="warn">(last seen ${x.last.date})</small>` : ""}</td>
-    <td>${where(x.last)}</td><td class="n">${x.last.apy.toFixed(2)}%</td><td class="n">${change}</td>`;
-  tbody.appendChild(tr);
-});
+  return FALLBACK_COLORS[hash % FALLBACK_COLORS.length];
+}
 
-// banks we could not read today
-const bad = RECORDS.filter(r => r.date === latestDate && r.status !== "ok");
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function validDate(value) {
+  return typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    !Number.isNaN(Date.parse(value + "T00:00:00Z"));
+}
+
+function validAPY(value) {
+  return typeof value === "number" &&
+    Number.isFinite(value) &&
+    value >= 0;
+}
+
+// Normalize dates to YYYY-MM-DD strings.
+const records = RECORDS.filter(r =>
+  r &&
+  typeof r.bank === "string" &&
+  typeof r.product === "string" &&
+  validDate(r.date)
+);
+
+const latestDate = records.reduce(
+  (latest, r) => r.date > latest ? r.date : latest,
+  ""
+);
+
+document.getElementById("asof").textContent = latestDate || "No data";
+
+const zipList = [...new Set(
+  records.filter(r => r.zip).map(r => String(r.zip))
+)].sort();
+
+document.getElementById("zips").textContent =
+  zipList.length ? zipList.join(", ") : "Not available";
+
+const seriesKey = r => [
+  r.bank,
+  r.product,
+  r.zip || "National"
+].join("|");
+
+const where = r => r.zip
+  ? `${r.state ? r.state + " " : ""}${r.zip}`
+  : "National";
+
+// Only successful records with a valid numeric APY are used.
+const good = records.filter(r =>
+  r.status === "ok" && validAPY(r.apy)
+);
+
+// Group history by bank, product, and ZIP.
+const series = new Map();
+
+for (const r of good) {
+  const key = seriesKey(r);
+  if (!series.has(key)) series.set(key, []);
+  series.get(key).push(r);
+}
+
+for (const s of series.values()) {
+  s.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Find the newest value and most recent different APY for each series.
+const rows = [...series.values()].map(s => {
+  const last = s[s.length - 1];
+
+  let prev = null;
+  for (let i = s.length - 2; i >= 0; i--) {
+    if (s[i].apy !== last.apy) {
+      prev = s[i];
+      break;
+    }
+  }
+
+  return {
+    last,
+    prev,
+    stale: last.date !== latestDate
+  };
+}).sort((a, b) =>
+  b.last.apy - a.last.apy ||
+  a.last.bank.localeCompare(b.last.bank)
+);
+
+// Render the summary table.
+const tbody = document.querySelector("#today tbody");
+
+if (rows.length === 0) {
+  tbody.innerHTML =
+    '<tr><td colspan="4" class="muted">No successful APY records available.</td></tr>';
+} else {
+  const bestAPY = rows[0].last.apy;
+
+  tbody.innerHTML = rows.map((x, index) => {
+    const r = x.last;
+    const isBest = index === 0;
+
+    let changeHTML = '<span class="unchanged">—</span>';
+
+    if (x.prev) {
+      const delta = r.apy - x.prev.apy;
+      const cls = delta > 0 ? "up" : "down";
+      const sign = delta > 0 ? "+" : "";
+
+      changeHTML =
+        `<span class="${cls}">${sign}${delta.toFixed(2)} pp</span>` +
+        `<br><small>Since ${escapeHTML(x.prev.date)}</small>`;
+    }
+
+    const staleHTML = x.stale
+      ? `<br><small class="warn">Last seen ${escapeHTML(r.date)}</small>`
+      : "";
+
+    return `
+      <tr class="${isBest ? "best-row" : ""}">
+        <td>
+          <span class="bank-name">${escapeHTML(r.bank)}</span>
+          ${isBest ? '<span class="best-badge">BEST APY</span>' : ""}
+        </td>
+        <td>${escapeHTML(r.product)}${staleHTML}</td>
+        <td class="n">
+          <span class="apy">${r.apy.toFixed(2)}%</span>
+        </td>
+        <td>${changeHTML}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+// Display collection failures for the latest data date.
+const bad = records.filter(r =>
+  r.date === latestDate && r.status !== "ok"
+);
+
 if (bad.length) {
   const box = document.getElementById("problems");
+  const list = document.getElementById("problem-list");
+
   box.hidden = false;
-  box.innerHTML = "<b>Not collected today:</b><br>" + bad.map(r => `${r.bank} (${where(r)}) &mdash; ${r.status}`).join("<br>");
+  list.innerHTML = bad.map(r =>
+    `<li><strong>${escapeHTML(r.bank)}</strong> ` +
+    `(${escapeHTML(where(r))}): ${escapeHTML(r.status)}</li>`
+  ).join("");
 }
 
-// history chart with a bank filter
-const filter = document.getElementById("filter");
-const banks = [...new Set(good.map(r => r.bank))].sort();
-filter.innerHTML = '<option value="">All banks</option>' + banks.map(b => `<option>${b}</option>`).join("");
-let chart;
-function draw() {
-  const pick = filter.value;
-  const dates = [...new Set(good.map(r => r.date))].sort();
-  const datasets = Object.values(series)
-    .filter(s => !pick || s[0].bank === pick)
+// Chart: one dataset per bank, with a stable bank color.
+// If multiple products or ZIPs exist for one bank, they are displayed as
+// separate lines with the bank name only in the legend. Tooltips identify
+// the product and ZIP so users can distinguish those lines.
+const filter = document.getElementById("range");
+const chartCanvas = document.getElementById("chart");
+
+let chart = null;
+
+function drawChart() {
+  if (chart) {
+    chart.destroy();
+    chart = null;
+  }
+
+  const successful = good.filter(r => validAPY(r.apy));
+
+  if (successful.length === 0) {
+    chartCanvas.style.display = "none";
+    return;
+  }
+
+  chartCanvas.style.display = "block";
+
+  const allDates = [...new Set(successful.map(r => r.date))]
+    .sort((a, b) => a.localeCompare(b));
+
+  const rangeValue = filter.value;
+  let dates = allDates;
+
+  if (rangeValue !== "all") {
+    const days = Number(rangeValue);
+    const end = new Date(latestDate + "T00:00:00Z");
+
+    if (Number.isFinite(days) && days > 0) {
+      const start = new Date(end);
+      start.setUTCDate(start.getUTCDate() - (days - 1));
+
+      const startString = start.toISOString().slice(0, 10);
+      dates = allDates.filter(d =>
+        d >= startString && d <= latestDate
+      );
+    }
+  }
+
+  if (dates.length === 0) {
+    chartCanvas.style.display = "none";
+    return;
+  }
+
+  // Build one line per series; the legend text contains only the bank name.
+  const datasets = [...series.values()]
     .map(s => {
-      const byDate = Object.fromEntries(s.map(r => [r.date, r.apy]));
-      return { label: s[0].bank + (s[0].zip ? " " + s[0].zip : ""),
-               data: dates.map(d => byDate[d] ?? null), spanGaps: true, tension: 0.15, pointRadius: 3 };
-    });
-  if (chart) chart.destroy();
-  chart = new Chart(document.getElementById("chart"), {
-    type: "line", data: { labels: dates, datasets },
-    options: { maintainAspectRatio: false, scales: { y: { title: { display: true, text: "APY %" } } } }
+      const latest = s[s.length - 1];
+      const byDate = new Map(s.map(r => [r.date, r.apy]));
+      const color = bankColor(latest.bank);
+
+      return {
+        label: latest.bank,
+        product: latest.product,
+        zip: latest.zip || "",
+        data: dates.map(date => ({
+          x: date,
+          y: byDate.has(date) ? byDate.get(date) : null
+        })),
+        borderColor: color,
+        backgroundColor: color,
+        pointBackgroundColor: color,
+        pointBorderColor: color,
+        pointRadius: 2,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        tension: 0.15,
+        spanGaps: true,
+        fill: false
+      };
+    })
+    .filter(ds => ds.data.some(point => point.y !== null));
+
+  chart = new Chart(chartCanvas, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "nearest",
+        intersect: false,
+        axis: "x"
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            pointStyle: "circle",
+            boxWidth: 8,
+            padding: 16,
+            // Legend labels intentionally contain bank names only.
+            generateLabels(chart) {
+              const original =
+                Chart.defaults.plugins.legend.labels.generateLabels(chart);
+
+              return original.map(item => ({
+                ...item,
+                text: chart.data.datasets[item.datasetIndex].label
+              }));
+            }
+          }
+        },
+        tooltip: {
+          enabled: true,
+          callbacks: {
+            title(items) {
+              return items.length ? items[0].parsed.x : "";
+            },
+            label(context) {
+              const ds = context.dataset;
+              const value = context.parsed.y;
+
+              if (value === null || value === undefined) return "";
+
+              const parts = [
+                ds.label,
+                ds.product,
+                `${value.toFixed(2)}% APY`
+              ];
+
+              if (ds.zip) parts.push(`ZIP ${ds.zip}`);
+
+              return parts.join(" · ");
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "category",
+          labels: dates,
+          title: {
+            display: true,
+            text: "Date"
+          },
+          ticks: {
+            maxTicksLimit: 10,
+            maxRotation: 0,
+            autoSkip: true
+          },
+          grid: {
+            display: false
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: "APY (%)"
+          },
+          beginAtZero: false,
+          ticks: {
+            callback(value) {
+              return `${value}%`;
+            }
+          }
+        }
+      }
+    }
   });
 }
-filter.onchange = draw;
-draw();
+
+filter.addEventListener("change", drawChart);
+drawChart();
 </script>
+
 </body>
 </html>
